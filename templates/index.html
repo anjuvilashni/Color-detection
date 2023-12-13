@@ -92,7 +92,7 @@
         >
     </div>
     </header>
-    <section id="about" class="bg-black">
+    <section id="about" class="bg-white">
     <div class="container">
         <div class="row">
         <div class="col offset-lg-8 text-center mx-auto">
@@ -112,43 +112,19 @@
         <div class="col-sm-4 text-center">
             <div class="bootstrap_img_upload"></div>
             <div class="container py-6">
-            <header class="text-black text-center">
-                <label class="form-label"
-                ><a class="btn" href="click"
-                    ><i class="fas fa-camera" style="font-size: 64px"></i></a
-                ></label>
-                <p class="text-white">Take a picture or</p>
-            </header>
             <div class="row">
                 <div class="col-md-6 mx-auto">
-                    <form action = "/upload" method = "post" enctype="multipart/form-data">
-                        <input type="file" name="file" />
-                        <input type = "submit" value="Upload">
-                    </form>   
-
-
                 <!-- Upload image input-->
-                <div class="input-group mb-3 px-2 py-2 rounded-pill bg-black">
-                    <input
-                    id="upload"
-                    type="file"
-                    onchange="readURL(this);"
-                    class="form-control border-0"
-                    />
-                    <label
-                    id="upload-label"
-                    for="upload"
-                    class="font-weight-light text-muted"
-                    >Choose file&nbsp;&nbsp;</label>
-
-                    <div class="input-group-append">
-                    <label
-                        for="upload"
-                        class="btn btn-light m-0 rounded-pill px-7"
-                    >
-                        <i class="fa fa-cloud-upload mr-2 text-muted"></i
-                    ></label>
-                    </div>
+                <div class="input-group">
+                    <form action="/upload" method="post" enctype="multipart/form-data">
+                        <div class="custom-file">
+                            <input type="file" name="file" class="custom-file-input border-0" id="customFile" accept="image/*" required>
+                            <label class="custom-file-label" for="customFile"></label>
+                        </div>
+                        <div class="input-group-append">
+                            <button type="submit" class="btn btn-primary">Upload</button>
+                        </div>
+                    </form>
                 </div>
                 </div>
             </div>

@@ -18,11 +18,11 @@ def index():
 
 
 @app.route("/upload", methods=["GET", "POST"])
-def success():
+def upload():
     if request.method == "POST":
         f = request.files["file"]
-        f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
-        return render_template("index.html")
+        f.save(os.path.join(app.config["UPLOAD_FOLDER"], "test.jpg"))
+        return render_template("index.html", item=f.filename)
 
 
 if __name__ == "__main__":

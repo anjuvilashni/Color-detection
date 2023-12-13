@@ -12,7 +12,6 @@ from tensorflow.keras.layers import Dense
 from tensorflow.keras.layers import Dropout
 from tensorflow.keras.layers import Flatten
 from tensorflow.keras.constraints import MaxNorm
-from tensorflow.keras.optimizers import SGD
 from tensorflow.keras.optimizers import Adam
 from tensorflow.keras.layers import Conv2D
 from tensorflow.keras.layers import MaxPooling2D

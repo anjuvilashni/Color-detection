@@ -8,6 +8,8 @@ app = Flask(__name__)
 app_root = os.path.abspath(os.path.dirname(__file__))
 
 app.secret_key = os.urandom(10)
+UPLOAD_FOLDER = os.path.join(app_root, "upload")
+app.config["UPLOAD_FOLDER"] = UPLOAD_FOLDER
 
 
 @app.route("/")
@@ -19,7 +21,7 @@ def index():
 def success():
     if request.method == "POST":
         f = request.files["file"]
-        f.save(f.filename)
+        f.save(os.path.join(app.config["UPLOAD_FOLDER"], f.filename))
         return render_template("index.html")
 
 

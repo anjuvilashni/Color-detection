@@ -49,9 +49,7 @@ def simulate():
         simulation_type = request.form.get("simulation_type")
         sim_image = simulate_color(img_path, simulation_type)
 
-        return render_template(
-            "index.html", sim_image_path="simulate.jpg"
-        )
+        return render_template("index.html")
 
 
 if __name__ == "__main__":

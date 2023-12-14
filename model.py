@@ -1,161 +1,34 @@
-from tensorflow.keras.datasets import cifar10
-
-import numpy as np
 import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import classification_report
-
+import tensorflow as tf
 from tensorflow.keras.datasets import cifar10
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense
-from tensorflow.keras.layers import Dropout
-from tensorflow.keras.layers import Flatten
-from tensorflow.keras.constraints import MaxNorm
-from tensorflow.keras.optimizers import Adam
-from tensorflow.keras.layers import Conv2D
-from tensorflow.keras.layers import MaxPooling2D
 from tensorflow.keras.utils import to_categorical
+
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import (
+    Dense,
+    Conv2D,
+    MaxPool2D,
+    Flatten,
+    Dropout,
+    BatchNormalization,
+)
+from tensorflow.keras.callbacks import EarlyStopping
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 
-import matplotlib.pyplot as plt
-from PIL import Image
+from sklearn.metrics import ConfusionMatrixDisplay
+from sklearn.metrics import classification_report, confusion_matrix
 
 (X_train, y_train), (X_test, y_test) = cifar10.load_data()
 
-print("Training set shape:", X_train.shape)
-print("Test set shape:", X_test.shape)
+print(f"X_train shape: {X_train.shape}")
+print(f"y_train shape: {y_train.shape}")
+print(f"X_test shape: {X_test.shape}")
+print(f"y_test shape: {y_test.shape}")
 
-X_train = X_train.astype("float32")
-X_test = X_test.astype("float32")
-X_train = X_train / 255.0
-X_test = X_test / 255.0
-
-y_train = to_categorical(y_train)
-y_test = to_categorical(y_test)
-
-X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_size=0.2)
-
-
-def cnn_model():
-    input_shape = (32, 32, 3)
-    n_classes = 10
-    model = Sequential()
-
-    # First Conv layer
-    model.add(
-        Conv2D(
-            128,
-            (3, 3),
-            padding="same",
-            activation="relu",
-            kernel_constraint=MaxNorm(1e-7),
-            input_shape=input_shape,
-        )
-    )
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
-    # Second Conv layer
-    model.add(
-        Conv2D(
-            256,
-            (3, 3),
-            padding="same",
-            activation="relu",
-            kernel_constraint=MaxNorm(1e-7),
-        )
-    )
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
-    # Third, fourth, fifth convolution layer
-    model.add(
-        Conv2D(
-            512,
-            (3, 3),
-            padding="same",
-            activation="relu",
-            kernel_constraint=MaxNorm(1e-7),
-        )
-    )
-    model.add(
-        Conv2D(
-            512,
-            (3, 3),
-            padding="same",
-            activation="relu",
-            kernel_constraint=MaxNorm(1e-7),
-        )
-    )
-    model.add(
-        Conv2D(
-            256,
-            (3, 3),
-            padding="same",
-            activation="relu",
-            kernel_constraint=MaxNorm(1e-7),
-        )
-    )
-    model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.25))
-
-    # Fully Connected layers
-    model.add(Flatten())
-
-    model.add(Dense(512, activation="relu"))
-    model.add(Dropout(0.5))
-    model.add(Dense(256, activation="relu"))
-    model.add(Dropout(0.5))
-    model.add(Dense(128, activation="relu"))
-    model.add(Dropout(0.5))
-
-    model.add(Dense(n_classes, activation="softmax"))
-
-    model.summary()
-
-    return model
-
-
-datagen = ImageDataGenerator(
-    featurewise_center=False,
-    samplewise_center=False,
-    featurewise_std_normalization=False,
-    samplewise_std_normalization=False,
-    zca_whitening=False,
-    rotation_range=15,
-    width_shift_range=0.1,
-    height_shift_range=0.1,
-    horizontal_flip=True,
-    vertical_flip=False,
-)
-
-datagen.fit(X_train)
-
-model = cnn_model()
-model.compile(
-    loss="categorical_crossentropy",
-    optimizer=Adam(learning_rate=0.0003, decay=1e-6),
-    metrics=["accuracy"],
-)
-
-history = model.fit(
-    datagen.flow(X_train, y_train, batch_size=64),
-    steps_per_epoch=len(X_train) // 64,
-    epochs=25,
-    validation_data=(X_valid, y_valid),
-    verbose=1,
-)
-
-# Plotting the train and val accuracy and loss
-pd.DataFrame(history.history).plot()
-
-# Evaluating model on the test set
-scores = model.evaluate(X_test, y_test)
-
-# Make predictions
-pred = model.predict(X_test)
-labels = [
+classes_name = [
     "Airplane",
     "Automobile",
     "Bird",
@@ -167,35 +40,175 @@ labels = [
     "Ship",
     "Truck",
 ]
-y_pred = np.argmax(pred, axis=1)
-y_true = np.argmax(y_test, axis=1)
-errors = y_pred - y_true != 0
 
-# Print Classification Report
-print(classification_report(y_true, y_pred))
+classes, counts = np.unique(y_train, return_counts=True)
+plt.barh(classes_name, counts)
+plt.title("Class distribution in training set")
 
-# Check the predictions
-fig, axes = plt.subplots(5, 5, figsize=(12, 12))
-axes = axes.ravel()
+classes, counts = np.unique(y_test, return_counts=True)
+plt.barh(classes_name, counts)
+plt.title("Class distribution in testing set")
 
-for i in np.arange(25):
-    axes[i].imshow(X_test[i])
-    axes[i].set_title("True: %s \nPredict: %s" % (labels[y_true[i]], labels[y_pred[i]]))
-    axes[i].axis("off")
-    plt.subplots_adjust(wspace=1)
+# Scale the data
+X_train = X_train / 255.0
+X_test = X_test / 255.0
 
-# Check the wrong predictions
-fig, axes = plt.subplots(5, 5, figsize=(12, 12))
-axes = axes.ravel()
+# Transform target variable into one-hotencoding
+y_cat_train = to_categorical(y_train, 10)
+y_cat_test = to_categorical(y_test, 10)
 
-miss_pred = np.where(y_pred != y_true)[0]
-for i in np.arange(25):
-    axes[i].imshow(X_test[miss_pred[i]])
-    axes[i].set_title(
-        "True: %s \nPredict: %s"
-        % (labels[y_true[miss_pred[i]]], labels[y_pred[miss_pred[i]]])
+INPUT_SHAPE = (32, 32, 3)
+KERNEL_SIZE = (3, 3)
+model = Sequential()
+
+# Convolutional Layer
+model.add(
+    Conv2D(
+        filters=32,
+        kernel_size=KERNEL_SIZE,
+        input_shape=INPUT_SHAPE,
+        activation="relu",
+        padding="same",
     )
-    axes[i].axis("off")
-    plt.subplots_adjust(wspace=1)
+)
+model.add(BatchNormalization())
+model.add(
+    Conv2D(
+        filters=32,
+        kernel_size=KERNEL_SIZE,
+        input_shape=INPUT_SHAPE,
+        activation="relu",
+        padding="same",
+    )
+)
+model.add(BatchNormalization())
+# Pooling layer
+model.add(MaxPool2D(pool_size=(2, 2)))
+# Dropout layers
+model.add(Dropout(0.25))
+
+model.add(
+    Conv2D(
+        filters=64,
+        kernel_size=KERNEL_SIZE,
+        input_shape=INPUT_SHAPE,
+        activation="relu",
+        padding="same",
+    )
+)
+model.add(BatchNormalization())
+model.add(
+    Conv2D(
+        filters=64,
+        kernel_size=KERNEL_SIZE,
+        input_shape=INPUT_SHAPE,
+        activation="relu",
+        padding="same",
+    )
+)
+model.add(BatchNormalization())
+model.add(MaxPool2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(
+    Conv2D(
+        filters=128,
+        kernel_size=KERNEL_SIZE,
+        input_shape=INPUT_SHAPE,
+        activation="relu",
+        padding="same",
+    )
+)
+model.add(BatchNormalization())
+model.add(
+    Conv2D(
+        filters=128,
+        kernel_size=KERNEL_SIZE,
+        input_shape=INPUT_SHAPE,
+        activation="relu",
+        padding="same",
+    )
+)
+model.add(BatchNormalization())
+model.add(MaxPool2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Flatten())
+# model.add(Dropout(0.2))
+model.add(Dense(128, activation="relu"))
+model.add(Dropout(0.25))
+model.add(Dense(10, activation="softmax"))
+
+METRICS = [
+    "accuracy",
+    tf.keras.metrics.Precision(name="precision"),
+    tf.keras.metrics.Recall(name="recall"),
+]
+model.compile(loss="categorical_crossentropy", optimizer="adam", metrics=METRICS)
+
+model.summary()
+
+early_stop = EarlyStopping(monitor="val_loss", patience=2)
+
+batch_size = 32
+data_generator = ImageDataGenerator(
+    width_shift_range=0.1, height_shift_range=0.1, horizontal_flip=True
+)
+train_generator = data_generator.flow(X_train, y_cat_train, batch_size)
+steps_per_epoch = X_train.shape[0] // batch_size
+
+r = model.fit(
+    train_generator,
+    epochs=50,
+    steps_per_epoch=steps_per_epoch,
+    validation_data=(X_test, y_cat_test),
+    #               callbacks=[early_stop],
+    #               batch_size=batch_size,
+)
 
 model.save("model.h5")
+
+# plt.figure(figsize=(12, 16))
+
+# plt.subplot(4, 2, 1)
+# plt.plot(r.history["loss"], label="Loss")
+# plt.plot(r.history["val_loss"], label="val_Loss")
+# plt.title("Loss Function Evolution")
+# plt.legend()
+
+# plt.subplot(4, 2, 2)
+# plt.plot(r.history["accuracy"], label="accuracy")
+# plt.plot(r.history["val_accuracy"], label="val_accuracy")
+# plt.title("Accuracy Function Evolution")
+# plt.legend()
+
+# plt.subplot(4, 2, 3)
+# plt.plot(r.history["precision"], label="precision")
+# plt.plot(r.history["val_precision"], label="val_precision")
+# plt.title("Precision Function Evolution")
+# plt.legend()
+
+# plt.subplot(4, 2, 4)
+# plt.plot(r.history["recall"], label="recall")
+# plt.plot(r.history["val_recall"], label="val_recall")
+# plt.title("Recall Function Evolution")
+# plt.legend()
+
+# evaluation = model.evaluate(X_test, y_cat_test)
+# print(f"Test Accuracy : {evaluation[1] * 100:.2f}%")
+
+# y_pred = model.predict(X_test)
+# y_pred = np.argmax(y_pred, axis=1)
+# cm = confusion_matrix(y_test, y_pred)
+
+
+# disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=classes_name)
+
+
+# # NOTE: Fill all variables here with default values of the plot_confusion_matrix
+# fig, ax = plt.subplots(figsize=(10, 10))
+# disp = disp.plot(xticks_rotation="vertical", ax=ax, cmap="summer")
+
+# plt.show()
+
+# print(classification_report(y_test, y_pred))

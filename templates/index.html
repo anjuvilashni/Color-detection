@@ -73,7 +73,7 @@
         <div class="row">
         <div class="col-lg-10 col-xxl-10 mx-auto">
             <h1 class="text-black text-uppercase ">
-            <strong>Object classification & Color Detection&nbsp;</strong>
+            <strong>Harmony in Perception: Enhancing Color Vision Awareness via Deep Learning&nbsp;</strong>
             </h1>
             <hr />
         </div>
@@ -125,14 +125,33 @@
                             <button type="submit" class="btn btn-primary">Upload</button>
                         </div>
                     </form>
+                    
                 </div>
                 </div>
             </div>
             </div>
         </div>
         <div class="col text-center text-white" id="get-started">
-            <p>The image is classified as:</p>
-            <p>{{item}}</p>
+            {% if message %}
+            <p>Classification Result: {{ message }}</p>
+            {% endif %}
+            <form action="/detect_color" method="post" enctype="multipart/form-data">
+                <input type="submit" value="Detect Color">
+            </form>
+
+            <form action="/simulate_color_blindness" method="post" enctype="multipart/form-data">
+                <label for="simulation_type">Choose Color Blindness Type:</label>
+        <select id="simulation_type" name="simulation_type">
+            <option value="protanopia">Protanopia</option>
+            <option value="deuteranopia">Deuteranopia</option>
+            <option value="tritanopia">Tritanopia</option>
+        </select>
+        <input type="submit" value="Simulate Color Blindness">
+    </form>
+    {% if sim_image_path %}
+        <p><b>Simulated Image:</b></p>
+        <img src="{{ sim_image_path }}" alt="Simulated Color Blindness" style="max-width: 400px;">
+    {% endif %}
         </div>
         </div>
         </div>

@@ -1,6 +1,7 @@
 import numpy as np
 import cv2
 import os
+import predict as image
 from flask import Flask
 from flask import render_template, request
 
@@ -22,7 +23,9 @@ def upload():
     if request.method == "POST":
         f = request.files["file"]
         f.save(os.path.join(app.config["UPLOAD_FOLDER"], "test.jpg"))
-        return render_template("index.html", item=f.filename)
+        
+        result = image.classify()
+        return render_template("index.html", item=result)
 
 
 if __name__ == "__main__":

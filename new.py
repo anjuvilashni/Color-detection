@@ -38,65 +38,67 @@ X_train, X_valid, y_train, y_valid = train_test_split(X_train, y_train, test_siz
 
 
 def cnn_model():
+    input_shape = (32, 32, 3)
+    n_classes = 10
     model = Sequential()
 
     # First Conv layer
     model.add(
         Conv2D(
-            filters=128,
-            kernel_size=(3, 3),
-            activation="relu",
+            128,
+            (3, 3),
             padding="same",
-            kernel_constraint=MaxNorm(1e-4),
-            input_shape=(32, 32, 3),
+            activation="relu",
+            kernel_constraint=MaxNorm(1e-7),
+            input_shape=input_shape,
         )
     )
     model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.3))
+    model.add(Dropout(0.25))
 
     # Second Conv layer
     model.add(
         Conv2D(
-            filters=256,
-            kernel_size=(3, 3),
-            activation="relu",
+            256,
+            (3, 3),
             padding="same",
-            kernel_constraint=MaxNorm(1e-4),
+            activation="relu",
+            kernel_constraint=MaxNorm(1e-7),
         )
     )
     model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.3))
+    model.add(Dropout(0.25))
 
     # Third, fourth, fifth convolution layer
     model.add(
         Conv2D(
-            filters=512,
-            kernel_size=(3, 3),
-            activation="relu",
+            512,
+            (3, 3),
             padding="same",
-            kernel_constraint=MaxNorm(1e-4),
+            activation="relu",
+            kernel_constraint=MaxNorm(1e-7),
         )
     )
     model.add(
         Conv2D(
-            filters=512,
-            kernel_size=(3, 3),
-            activation="relu",
+            512,
+            (3, 3),
             padding="same",
-            kernel_constraint=MaxNorm(1e-4),
+            activation="relu",
+            kernel_constraint=MaxNorm(1e-7),
         )
     )
     model.add(
         Conv2D(
-            filters=256,
-            kernel_size=(3, 3),
-            activation="relu",
+            256,
+            (3, 3),
             padding="same",
-            kernel_constraint=MaxNorm(1e-4),
+            activation="relu",
+            kernel_constraint=MaxNorm(1e-7),
         )
     )
     model.add(MaxPooling2D(pool_size=(2, 2)))
-    model.add(Dropout(0.3))
+    model.add(Dropout(0.25))
 
     # Fully Connected layers
     model.add(Flatten())
@@ -108,7 +110,7 @@ def cnn_model():
     model.add(Dense(128, activation="relu"))
     model.add(Dropout(0.5))
 
-    model.add(Dense(10, activation="softmax"))
+    model.add(Dense(n_classes, activation="softmax"))
 
     model.summary()
 
@@ -133,14 +135,14 @@ datagen.fit(X_train)
 model = cnn_model()
 model.compile(
     loss="categorical_crossentropy",
-    optimizer=Adam(lr=0.0003, decay=1e-6),
+    optimizer=Adam(learning_rate=0.0003, decay=1e-6),
     metrics=["accuracy"],
 )
 
-history = model.fit_generator(
+history = model.fit(
     datagen.flow(X_train, y_train, batch_size=64),
     steps_per_epoch=len(X_train) // 64,
-    epochs=125,
+    epochs=25,
     validation_data=(X_valid, y_valid),
     verbose=1,
 )
